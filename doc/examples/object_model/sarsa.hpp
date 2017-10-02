@@ -9,7 +9,7 @@
 #define NUMBER_OF_ACTIONS 3
 #define NUMBER_OF_FEATURES 54
 #define TD_N 2
-#define EPSILON 0.05
+#define EPSILON 0.1
 
 namespace object_model
 {
@@ -37,7 +37,7 @@ public:
   void ClearHistory();
 
   bool EvaluateAndImprovePolicy(double reward, bool isFinal);
-  
+
   Action GetAction();
   void UpdateWeights(float reward, Action chosenAction, bool isFinal);
   void StoreFeatures(int action, float reward)
@@ -57,6 +57,8 @@ public:
       unsigned char romVal = aleRam.get(addresses[i]);
       featureHistory[i][romVal]++;
       features[i + 1] = romVal / 255.0f;
+      if (i < 36)
+        features[i + 1] = features[i + 1] / 1000.0;
       // std::cout << (int)romVal << ", ";
     }
     // std::cout << std::endl;

@@ -86,8 +86,8 @@ int main(int argc, char **argv)
             else
             {
                 chosenAction = sarsa.GetAction();
-               // if (chosenAction != 0)
-               //     cout << "Eureka: " << chosenAction << endl;
+                // if (chosenAction != 0)
+                //     cout << "Eureka: " << chosenAction << endl;
             }
 
             // Apply the action and get the resulting reward
@@ -99,7 +99,7 @@ int main(int argc, char **argv)
             int scr = 1 * (x & 0x000F) + 10 * ((x & 0x00F0) >> 4) + 100 * (y & 0x000F);
 
             if (byte_val != lives)
-                reward = -1;
+                reward = -10;
             else
                 reward = (float)(scr - score);
 
@@ -116,9 +116,9 @@ int main(int argc, char **argv)
         }
 
         // sarsa.PrintWeights();
-        if (totalReward > -5)
+        if (score > 0)
         {
-            cout << "Episode " << episode << " ended with score: " << totalReward << endl;
+            cout << "Episode " << episode << " ended with reward: " << totalReward << ", score = " << score << endl;
             //if (totalReward > 0)
             //    sarsa.PrintWeights();
         }

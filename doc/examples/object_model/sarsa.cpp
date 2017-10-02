@@ -11,7 +11,7 @@ Sarsa::Sarsa()
 {
     for (int i = 0; i < NUMBER_OF_FEATURES; i++)
     {
-        features[i] = 1.0;
+        features[i] = 0.001;
         for (int j = 0; j < NUMBER_OF_ACTIONS; j++)
         {
             weights[j][i] = 0.0;
@@ -35,7 +35,7 @@ Sarsa::Sarsa()
 
     historyIndex = 0;
     alpha = 0.01;
-    discount = 0.9;
+    discount = 0.95;
 }
 void Sarsa::ClearHistory()
 {
