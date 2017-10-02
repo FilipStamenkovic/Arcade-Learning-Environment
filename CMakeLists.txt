@@ -173,6 +173,15 @@ if(BUILD_EXAMPLES)
   target_link_libraries(sharedLibraryInterfaceExample ${LINK_LIBS})
   add_dependencies(sharedLibraryInterfaceExample ale-lib)
 
+  link_directories(${CMAKE_CURRENT_SOURCE_DIR})
+  add_executable(BreakoutExample ${CMAKE_CURRENT_SOURCE_DIR}/doc/examples/BreakoutExample.cpp ${CMAKE_CURRENT_SOURCE_DIR}/doc/examples/object_model/sarsa.cpp)
+  set_target_properties(BreakoutExample PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/doc/examples)
+  set_target_properties(BreakoutExample PROPERTIES OUTPUT_NAME ${PROJECT_NAME}-BreakoutExample)
+  target_link_libraries(BreakoutExample ale)
+  target_link_libraries(BreakoutExample ${LINK_LIBS})
+  add_dependencies(BreakoutExample ale-lib)
+
+
   # Fifo interface example.
   link_directories(${CMAKE_CURRENT_SOURCE_DIR})
   add_executable(fifoInterfaceExample ${CMAKE_CURRENT_SOURCE_DIR}/doc/examples/fifoInterfaceExample.cpp)
