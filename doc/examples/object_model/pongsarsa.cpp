@@ -1,13 +1,13 @@
 #include <iostream>
 #include <vector>
 #include <limits>
-#include "sarsa.hpp"
+#include "pongsarsa.hpp"
 
 using namespace std;
 
 namespace object_model
 {
-Sarsa::Sarsa()
+PongSarsa::PongSarsa()
 {
     for (int i = 0; i < NUMBER_OF_FEATURES; i++)
     {
@@ -38,7 +38,7 @@ Sarsa::Sarsa()
     discount = 0.95;
 }
 
-Action Sarsa::GetAction()
+Action PongSarsa::GetAction()
 {
     float maxQ = -std::numeric_limits<float>::max();
     int maxIndex = 0;
@@ -61,7 +61,7 @@ Action Sarsa::GetAction()
 
     return (Action)(maxIndex * 2 + maxIndex % 2);
 }
-void Sarsa::UpdateWeights(float reward, Action chosenAction, bool isFinal)
+void PongSarsa::UpdateWeights(float reward, Action chosenAction, bool isFinal)
 {
     //todo: avoid double calculations like this!
     if (historyIndex < TD_N)
@@ -80,7 +80,7 @@ void Sarsa::UpdateWeights(float reward, Action chosenAction, bool isFinal)
         }
         q += weights[chosenAction][of] * features[of];
     }
-   // cout << "QQQ = " << q << ",  Action = " << chosenAction << endl;
+    // cout << "QQQ = " << q << ",  Action = " << chosenAction << endl;
     float diff = 0.0f;
 
     if (isFinal)
@@ -154,11 +154,11 @@ void Sarsa::UpdateWeights(float reward, Action chosenAction, bool isFinal)
     }
 }
 
-void Sarsa::StoreHistory()
+void PongSarsa::StoreHistory()
 {
 }
 
-void Sarsa::PrintWeights()
+void PongSarsa::PrintWeights()
 {
     for (int a = 0; a < NUMBER_OF_ACTIONS; ++a)
     {
@@ -172,7 +172,7 @@ void Sarsa::PrintWeights()
     }
 }
 
-void Sarsa::FlushToDisk(char *filename)
+void PongSarsa::FlushToDisk(char *filename)
 {
     if (std::isnan(weights[0][0]))
         return;
@@ -193,7 +193,7 @@ void Sarsa::FlushToDisk(char *filename)
 
     f.close();
 }
-void Sarsa::LoadFromDisk(char *filename)
+void PongSarsa::LoadFromDisk(char *filename)
 {
     ifstream f(filename);
     if (!f || !f.is_open())

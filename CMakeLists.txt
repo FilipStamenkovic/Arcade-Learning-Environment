@@ -181,6 +181,14 @@ if(BUILD_EXAMPLES)
   target_link_libraries(BreakoutExample ${LINK_LIBS})
   add_dependencies(BreakoutExample ale-lib)
 
+  link_directories(${CMAKE_CURRENT_SOURCE_DIR})
+  add_executable(PongExample ${CMAKE_CURRENT_SOURCE_DIR}/doc/examples/PongExample.cpp ${CMAKE_CURRENT_SOURCE_DIR}/doc/examples/object_model/pongsarsa.cpp)
+  set_target_properties(PongExample PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/doc/examples)
+  set_target_properties(PongExample PROPERTIES OUTPUT_NAME ${PROJECT_NAME}-PongExample)
+  target_link_libraries(PongExample ale)
+  target_link_libraries(PongExample ${LINK_LIBS})
+  add_dependencies(PongExample ale-lib)
+
 
   # Fifo interface example.
   link_directories(${CMAKE_CURRENT_SOURCE_DIR})
