@@ -40,19 +40,19 @@ Sarsa::Sarsa()
 
 Action Sarsa::GetAction()
 {
-    float maxQ = -std::numeric_limits<float>::max();
+    double maxQ = -std::numeric_limits<double>::max();
     int maxIndex = 0;
 
     for (int i = 0; i < NUMBER_OF_ACTIONS; ++i)
     {
-        float q = 0.0f;
+        double q = 0.0f;
         for (int of = 0; of < NUMBER_OF_FEATURES; ++of)
         {
             q += weights[i][of] * features[of];
         }
 
         //cout << "Q = " << q << ", i = " << i << endl;
-        if (q >= maxQ)
+        if (q > maxQ)
         {
             maxQ = q;
             maxIndex = i;
@@ -61,27 +61,29 @@ Action Sarsa::GetAction()
 
     return (Action)(maxIndex * 2 + maxIndex % 2);
 }
-void Sarsa::UpdateWeights(float reward, Action chosenAction, bool isFinal)
+void Sarsa::UpdateWeights(double reward, Action chosenAction, bool isFinal)
 {
     //todo: avoid double calculations like this!
-    if (historyIndex < TD_N)
+    if (historyIndex < TD_N && !isFinal)
         return;
 
-    float q = 0.0f;
+        double q = 0.0f;
 
     historyIndex = 0;
+    int n;
 
     //PrintWeights();
-    for (int of = 0; of < NUMBER_OF_FEATURES; ++of)
-    {
-        if (weights[chosenAction][of] != 0.0)
-        {
-            //std::cout << "baasd = " << chosenAction << ", q = " << q << ", Reward = " << reward << std::endl;
-        }
-        q += weights[chosenAction][of] * features[of];
-    }
-   // cout << "QQQ = " << q << ",  Action = " << chosenAction << endl;
-    float diff = 0.0f;
+    // for (int of = 0; of < NUMBER_OF_FEATURES; ++of)
+    // {
+    //     if (weights[chosenAction][of] != 0.0)
+    //     {
+    //         //std::cout << "baasd = " << chosenAction << ", q = " << q << ", Reward = " << reward << std::endl;
+    //     }
+    //     q += weights[chosenAction][of] * features[of];
+    // }
+    // cout << "QQQ = " << q << ",  Action = " << chosenAction << endl;
+    double diff = 0.0f;
+    double q_ = 0.0;
 
     if (isFinal)
     {
@@ -101,54 +103,54 @@ void Sarsa::UpdateWeights(float reward, Action chosenAction, bool isFinal)
             // else if (weights[chosenAction][i] > 10000)
             //     weights[chosenAction][i] = 10000;
         }
-        historyIndex = 0;
+        n = historyIndex;
     }
     else
     {
         //todo: avoid double calculations like this!
-        float gama = 1;
-        float q_ = 0.0f;
         for (int of = 0; of < NUMBER_OF_FEATURES; ++of)
         {
             q_ += weights[chosenAction][of] * features[of];
         }
+        n = TD_N - 1;
+    }
 
-        //cout << "Q_ = " << q_ << endl;
-        for (int n = TD_N - 1; n >= 0; n--)
+    double gama = 1;
+    //cout << "Q_ = " << q_ << endl;
+    for (; n >= 0; n--)
+    {
+        gama = gama * discount;
+        int action = actions[n];
+
+        q = 0.0;
+
+        for (int of = 0; of < NUMBER_OF_FEATURES; ++of)
         {
-            gama = gama * discount;
-            int action = actions[n];
+            q += weights[action][of] * history[n][of];
+        }
 
-            q = 0.0;
+        diff = alpha * (reward + gama * q_ - q);
 
-            for (int of = 0; of < NUMBER_OF_FEATURES; ++of)
+        //if (reward != 0.0)
+        //    std::cout << "Action = " << action << ", Diff = " << diff << ", Reward = " << reward << std::endl;
+        reward += rewards[n];
+
+        for (int i = 0; i < NUMBER_OF_FEATURES; ++i)
+        {
+            weights[action][i] += diff * history[n][i];
+            if (weights[action][i] != 0.0)
             {
-                q += weights[action][of] * history[n][of];
+                // std::cout << "Action = " << action << ", Diff = " << diff << ", Reward = " << reward << std::endl;
             }
 
-            diff = alpha * (reward + gama * q_ - q);
+            // if (weights[action][i] < -10000)
+            //     weights[action][i] = -10000;
+            // else if (weights[action][i] > 10000)
+            //     weights[action][i] = 10000;
 
-            //if (reward != 0.0)
-            //    std::cout << "Action = " << action << ", Diff = " << diff << ", Reward = " << reward << std::endl;
-            reward += rewards[n];
-
-            for (int i = 0; i < NUMBER_OF_FEATURES; ++i)
+            if (std::isnan(weights[action][i]))
             {
-                weights[action][i] += diff * history[n][i];
-                if (weights[action][i] != 0.0)
-                {
-                    // std::cout << "Action = " << action << ", Diff = " << diff << ", Reward = " << reward << std::endl;
-                }
-
-                // if (weights[action][i] < -10000)
-                //     weights[action][i] = -10000;
-                // else if (weights[action][i] > 10000)
-                //     weights[action][i] = 10000;
-
-                if (std::isnan(weights[action][i]))
-                {
-                    std::cout << "History: " << history[n][i] << std::endl;
-                }
+                std::cout << "History: " << history[n][i] << std::endl;
             }
         }
     }
@@ -209,7 +211,7 @@ void Sarsa::LoadFromDisk(char *filename)
 
         double w = atof(line.c_str());
 
-        weights[i][j++] = (float)w;
+        weights[i][j++] = w;
 
         if (j == NUMBER_OF_FEATURES)
         {

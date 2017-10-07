@@ -18,7 +18,7 @@
 //score: CD, CE
 //brick addresses from: 80-A3
 //paddle position: C6, C8
-//ball info: E1, E3, E4, E5, E7, E8, E9, EB, EC, D2, D4, DB, DF, F9, FA
+//ball info: E3, E5, E7, E9
 
 #include <iostream>
 #include <ale_interface.hpp>
@@ -27,7 +27,7 @@
 #ifdef __USE_SDL
 #include <SDL.h>
 #endif
-
+#define DECREASE_STEP 10
 using namespace std;
 using namespace object_model;
 
@@ -61,24 +61,38 @@ int main(int argc, char **argv)
     // Get the vector of legal actions
     ActionVect legal_actions = ale.getLegalActionSet();
 
+    double epsilon = 1;
+
     // Play 10 episodes
     for (int episode = 0;; episode++)
     {
-        float totalReward = 0;
+        double totalReward = 0;
+        long frameCount = 0;
         Action chosenAction = PLAYER_A_NOOP;
-        float reward = 0;
+        double reward = 0;
         int lives = 5;
+        int livesBeforePenalty = 0;
         int score = 0;
+        char previousDir = 0;
+        int ballLoop = 0;
+        epsilon = epsilon / DECREASE_STEP;
         if (argc > 2 && !(episode % 10))
             sarsa.FlushToDisk(argv[2]);
         while (!ale.game_over())
         {
+            frameCount++;
             ale.act(PLAYER_A_FIRE);
             sarsa.ReadFeatures(ale.getRAM());
 
             sarsa.UpdateWeights(reward, (Action)(chosenAction / 2), ale.game_over());
 
-            if (rand() / ((double)RAND_MAX) < EPSILON)
+            if (ballLoop > 100)
+            {
+                chosenAction = PLAYER_A_NOOP;
+                if (!livesBeforePenalty)
+                    livesBeforePenalty = lives;
+            }
+            else if (rand() / ((double)RAND_MAX) < 0.0)
             {
                 int index = rand() % NUMBER_OF_ACTIONS;
                 chosenAction = (Action)(index * 2 + index % 2);
@@ -97,11 +111,38 @@ int main(int argc, char **argv)
             int y = ale.getRAM().get(76);
             int byte_val = ale.getRAM().get(57);
             int scr = 1 * (x & 0x000F) + 10 * ((x & 0x00F0) >> 4) + 100 * (y & 0x000F);
+            char dir = ale.getRAM().get(0xE7);
 
             if (byte_val != lives)
+            {
+                ballLoop = 0;
                 reward = -10;
+            }
+            else if (scr != score)
+            {
+                reward = (double)(scr - score);
+                ballLoop = 0;
+            }
+            else if (previousDir > 0 && dir < 0)
+            {
+                if (ballLoop)
+                {
+                    ballLoop++;
+                    reward = -1;
+                   // cout << "Penalty!" << endl;
+                }
+                else
+                {
+                    reward = 1;
+                    ballLoop = 1;
+                }
+            }
             else
-                reward = (float)(scr - score);
+            {
+                reward = 0;   
+            }
+
+            previousDir = dir;
 
             // if (reward != 0)
             // {
@@ -115,10 +156,10 @@ int main(int argc, char **argv)
             totalReward += reward;
         }
 
-        // sarsa.PrintWeights();
         if (score > 0)
         {
-            cout << "Episode " << episode << " ended with reward: " << totalReward << ", score = " << score << endl;
+            cout << "Episode " << episode << " ended with reward: " << totalReward
+                 << ", score = " << score << ", Frame count = " << frameCount << ", Lives Before Penalty = " << livesBeforePenalty << endl;
             //if (totalReward > 0)
             //    sarsa.PrintWeights();
         }
