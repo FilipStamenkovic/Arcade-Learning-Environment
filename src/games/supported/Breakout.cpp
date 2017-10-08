@@ -57,7 +57,7 @@ void BreakoutSettings::step(const System& system) {
     // update terminal status
     int byte_val = readRam(&system, 57);
     if (!m_started && byte_val == 5) m_started = true;
-    m_terminal = m_started && byte_val == 0;
+    m_terminal = (m_started && byte_val == 0) || score == 864;
     m_lives = byte_val;
 }
 

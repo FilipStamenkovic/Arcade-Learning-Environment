@@ -7,13 +7,14 @@
 #include <ale_ram.hpp>
 
 #define NUMBER_OF_ACTIONS 3
-#define NUMBER_OF_FEATURES 2
+#define NUMBER_OF_FEATURES 4
 #define TD_N 10
 #define EPSILON 0.05
 
 namespace object_model
 {
 
+  static const unsigned char addresses[] = {0xC6, 0xC8, 0xE3, 0xE5}; 
 class PongSarsa
 {
 private:
@@ -59,8 +60,11 @@ public:
     int player_y_pos = (aleRam.get(player_y_pos_addr));
 
     int hdiff = player_y_pos - ball_y_pos;
+    
+     features[3] = hdiff / 255.0f;
 
-    features[1] = hdiff / 255.0f;
+     features[1] = player_y_pos / 255000.0f;
+     features[2] = ball_y_pos / 255000.0f;
   };
   void PrintWeights();
   void FlushToDisk(char *filename);

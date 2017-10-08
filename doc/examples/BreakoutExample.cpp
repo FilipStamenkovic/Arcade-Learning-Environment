@@ -27,7 +27,7 @@
 #ifdef __USE_SDL
 #include <SDL.h>
 #endif
-#define DECREASE_STEP 10
+#define DECREASE_STEP 50
 using namespace std;
 using namespace object_model;
 
@@ -62,6 +62,7 @@ int main(int argc, char **argv)
     ActionVect legal_actions = ale.getLegalActionSet();
 
     double epsilon = 1;
+    bool onlyPlay = argc > 3;
 
     // Play 10 episodes
     for (int episode = 0;; episode++)
@@ -76,17 +77,15 @@ int main(int argc, char **argv)
         char previousDir = 0;
         int ballLoop = 0;
         epsilon = epsilon / DECREASE_STEP;
-        if (argc > 2 && !(episode % 10))
-            sarsa.FlushToDisk(argv[2]);
         while (!ale.game_over())
         {
             frameCount++;
             ale.act(PLAYER_A_FIRE);
             sarsa.ReadFeatures(ale.getRAM());
 
-            sarsa.UpdateWeights(reward, (Action)(chosenAction / 2), ale.game_over());
+            sarsa.UpdateWeights(reward, (Action)(chosenAction / 2), ale.game_over(), onlyPlay);
 
-            if (ballLoop > 100)
+            if (ballLoop > 100 || score == 864)
             {
                 chosenAction = PLAYER_A_NOOP;
                 if (!livesBeforePenalty)
@@ -142,6 +141,9 @@ int main(int argc, char **argv)
                 reward = 0;   
             }
 
+            if (!(frameCount % DECREASE_STEP))
+                reward = reward - 1;
+
             previousDir = dir;
 
             // if (reward != 0)
@@ -156,7 +158,12 @@ int main(int argc, char **argv)
             totalReward += reward;
         }
 
-        if (score > 0)
+
+        if (argc > 2)
+        {
+            sarsa.FlushToDisk(argv[2], totalReward);
+        }
+        if (score >= 0)
         {
             cout << "Episode " << episode << " ended with reward: " << totalReward
                  << ", score = " << score << ", Frame count = " << frameCount << ", Lives Before Penalty = " << livesBeforePenalty << endl;

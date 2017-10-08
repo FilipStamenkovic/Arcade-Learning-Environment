@@ -36,6 +36,7 @@ Sarsa::Sarsa()
     historyIndex = 0;
     alpha = 0.01;
     discount = 0.95;
+    maxReward = 0.0;
 }
 
 Action Sarsa::GetAction()
@@ -51,7 +52,6 @@ Action Sarsa::GetAction()
             q += weights[i][of] * features[of];
         }
 
-        //cout << "Q = " << q << ", i = " << i << endl;
         if (q > maxQ)
         {
             maxQ = q;
@@ -61,27 +61,18 @@ Action Sarsa::GetAction()
 
     return (Action)(maxIndex * 2 + maxIndex % 2);
 }
-void Sarsa::UpdateWeights(double reward, Action chosenAction, bool isFinal)
+void Sarsa::UpdateWeights(double reward, Action chosenAction, bool isFinal, bool onlyPlay)
 {
-    //todo: avoid double calculations like this!
     if (historyIndex < TD_N && !isFinal)
         return;
 
-        double q = 0.0f;
-
     historyIndex = 0;
-    int n;
+    if (onlyPlay)
+        return;
 
-    //PrintWeights();
-    // for (int of = 0; of < NUMBER_OF_FEATURES; ++of)
-    // {
-    //     if (weights[chosenAction][of] != 0.0)
-    //     {
-    //         //std::cout << "baasd = " << chosenAction << ", q = " << q << ", Reward = " << reward << std::endl;
-    //     }
-    //     q += weights[chosenAction][of] * features[of];
-    // }
-    // cout << "QQQ = " << q << ",  Action = " << chosenAction << endl;
+    double q = 0.0f;
+
+    int n;
     double diff = 0.0f;
     double q_ = 0.0;
 
@@ -89,25 +80,14 @@ void Sarsa::UpdateWeights(double reward, Action chosenAction, bool isFinal)
     {
         diff = alpha * (reward - q);
 
-        //if (reward != 0.0)
-        //    std::cout << "aAction = " << chosenAction << ", Diff = " << diff << ", Reward = " << reward << std::endl;
         for (int i = 0; i < NUMBER_OF_FEATURES; ++i)
         {
             weights[chosenAction][i] += diff * features[i];
-            if (weights[chosenAction][i] != 0.0)
-            {
-                //std::cout << "aaaAction = " << chosenAction << ", Diff = " << diff << ", Reward = " << reward << std::endl;
-            }
-            // if (weights[chosenAction][i] < -10000)
-            //     weights[chosenAction][i] = -10000;
-            // else if (weights[chosenAction][i] > 10000)
-            //     weights[chosenAction][i] = 10000;
         }
         n = historyIndex;
     }
     else
     {
-        //todo: avoid double calculations like this!
         for (int of = 0; of < NUMBER_OF_FEATURES; ++of)
         {
             q_ += weights[chosenAction][of] * features[of];
@@ -116,7 +96,6 @@ void Sarsa::UpdateWeights(double reward, Action chosenAction, bool isFinal)
     }
 
     double gama = 1;
-    //cout << "Q_ = " << q_ << endl;
     for (; n >= 0; n--)
     {
         gama = gama * discount;
@@ -131,33 +110,13 @@ void Sarsa::UpdateWeights(double reward, Action chosenAction, bool isFinal)
 
         diff = alpha * (reward + gama * q_ - q);
 
-        //if (reward != 0.0)
-        //    std::cout << "Action = " << action << ", Diff = " << diff << ", Reward = " << reward << std::endl;
         reward += rewards[n];
 
         for (int i = 0; i < NUMBER_OF_FEATURES; ++i)
         {
             weights[action][i] += diff * history[n][i];
-            if (weights[action][i] != 0.0)
-            {
-                // std::cout << "Action = " << action << ", Diff = " << diff << ", Reward = " << reward << std::endl;
-            }
-
-            // if (weights[action][i] < -10000)
-            //     weights[action][i] = -10000;
-            // else if (weights[action][i] > 10000)
-            //     weights[action][i] = 10000;
-
-            if (std::isnan(weights[action][i]))
-            {
-                std::cout << "History: " << history[n][i] << std::endl;
-            }
         }
     }
-}
-
-void Sarsa::StoreHistory()
-{
 }
 
 void Sarsa::PrintWeights()
@@ -174,16 +133,20 @@ void Sarsa::PrintWeights()
     }
 }
 
-void Sarsa::FlushToDisk(char *filename)
+void Sarsa::FlushToDisk(char *filename, double reward)
 {
-    if (std::isnan(weights[0][0]))
+    if (maxReward >= reward)
         return;
+
+    maxReward = reward;
+
     ofstream f(filename);
 
     if (!f)
         return;
 
     ostringstream o;
+    o << reward << endl;
     for (int i = 0; i < NUMBER_OF_ACTIONS; i++)
     {
         for (int j = 0; j < NUMBER_OF_FEATURES; ++j)
@@ -203,6 +166,13 @@ void Sarsa::LoadFromDisk(char *filename)
 
     int i = 0;
     int j = 0;
+    if(!f.eof())
+    {
+        string l;
+        getline(f, l);
+        maxReward = atof(l.c_str());
+    }
+
     while (!f.eof() && i < NUMBER_OF_FEATURES * NUMBER_OF_ACTIONS)
     {
         string line;

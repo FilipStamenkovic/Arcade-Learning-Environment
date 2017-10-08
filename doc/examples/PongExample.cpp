@@ -76,7 +76,7 @@ int main(int argc, char **argv)
 
             sarsa.UpdateWeights(reward, (Action)(chosenAction / 2), ale.game_over());
 
-            if (rand() / ((double)RAND_MAX) < EPSILON)
+            if (rand() / ((double)RAND_MAX) < 0.0)
             {
                 int index = rand() % NUMBER_OF_ACTIONS;
                 chosenAction = (Action)(index * 2 + index % 2);
@@ -95,12 +95,7 @@ int main(int argc, char **argv)
         }
 
         // sarsa.PrintWeights();
-        if (totalReward > 0)
-        {
-            cout << "Episode " << episode << " ended with reward: " << totalReward << endl;
-            //if (totalReward > 0)
-            //    sarsa.PrintWeights();
-        }
+        cout << "Episode " << episode << " ended with reward: " << totalReward << endl;
         ale.reset_game();
     }
 

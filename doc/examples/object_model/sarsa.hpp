@@ -37,12 +37,13 @@ private:
   int featureHistory[NUMBER_OF_FEATURES][256];
   int actions[TD_N];
   int historyIndex;
+  double maxReward;
 
 public:
   Sarsa();
 
   Action GetAction();
-  void UpdateWeights(double reward, Action chosenAction, bool isFinal);
+  void UpdateWeights(double reward, Action chosenAction, bool isFinal, bool onlyPlay);
   void StoreFeatures(int action, double reward)
   {
     for (int i = 0; i < NUMBER_OF_FEATURES; i++)
@@ -79,11 +80,8 @@ public:
     features[i] = hdiff / 255.0f;
   };
   void PrintWeights();
-  void FlushToDisk(char *filename);
+  void FlushToDisk(char *filename, double totalReward);
   void LoadFromDisk(char *filename);
-
-private:
-  void StoreHistory();
 };
 }
 
