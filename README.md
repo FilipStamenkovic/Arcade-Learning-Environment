@@ -101,4 +101,3 @@ In BibTeX format:
 }
 ```
 
-
